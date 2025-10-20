@@ -1,0 +1,1 @@
+# C:\Users\pc\anaconda3\test_import 이 경로에 내용있음

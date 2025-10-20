@@ -1,0 +1,97 @@
+# https://www.kaggle.com/competitions/santander-customer-transaction-prediction
+
+from keras.models import Sequential
+from keras.layers import Dense, BatchNormalization, Dropout
+from keras.callbacks import EarlyStopping, ModelCheckpoint
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MaxAbsScaler
+from sklearn.metrics import f1_score
+import numpy as np
+import pandas as pd
+import datetime
+import time
+
+path = './Study25/_data/kaggle/santander/'
+train_csv = pd.read_csv(path + 'train.csv', index_col=0)
+test_csv = pd.read_csv(path + 'test.csv', index_col=0)
+sub_csv = pd.read_csv(path + 'sample_submission.csv')
+
+x = train_csv.drop(['target'], axis=1)
+y = train_csv['target']
+
+import pandas as pd
+from xgboost import XGBClassifier, XGBRegressor
+
+seed = 72
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=seed, stratify=y
+)
+
+model4 = XGBClassifier(random_state=seed)
+model4.fit(x_train, y_train)
+print('12')
+print(f'# {model4.__class__.__name__}')
+print(f'# ACC : {model4.score(x_test, y_test)}') 
+print('#', model4.feature_importances_)
+
+print('# 25%지점 :', np.percentile(model4.feature_importances_, 25))
+per = np.percentile(model4.feature_importances_, 25)
+
+col_names = []
+# 삭제할 컬럼(25% 이하) 찾기
+for i, fi in enumerate(model4.feature_importances_) :
+    # print(i, fi)
+    if fi <= per :
+        col_names.append(x.columns[i])
+    else :
+        continue
+
+x = pd.DataFrame(x, columns=x.columns)
+x = x.drop(columns=col_names)
+
+x_train, x_test, y_train, y_test = train_test_split(
+    x, y, test_size=0.2, random_state=seed, stratify=y
+)
+
+model4.fit(x_train, y_train)
+print(f'# ACC2 : {model4.score(x_test, y_test)}')
+
+# XGBClassifier
+# ACC : 0.91245
+# [0.00822321 0.00836759 0.00983903 0.00267849 0.0031243  0.00565606
+#  0.00906946 0.00202695 0.00362323 0.00731053 0.00183558 0.00369052
+#  0.01528146 0.00939383 0.00229519 0.00323163 0.0028541  0.00334098
+#  0.00578924 0.0035781  0.00338641 0.00799029 0.01124637 0.00387273
+#  0.00404931 0.00333993 0.01007462 0.00203094 0.00385971 0.00205807
+#  0.00265366 0.0039567  0.00454389 0.00728402 0.00707334 0.00500989
+#  0.00573408 0.0026697  0.00238509 0.00305228 0.01013305 0.00231015
+#  0.00268105 0.00405086 0.00988906 0.00320167 0.00236631 0.00279014
+#  0.00423285 0.00508822 0.00267939 0.00411365 0.00348821 0.01276674
+#  0.00302086 0.00288296 0.00488705 0.00329389 0.00377968 0.00269737
+#  0.0026175  0.00288665 0.00285261 0.00273683 0.00245159 0.0026291
+#  0.00353758 0.00536913 0.00287359 0.00310007 0.00352056 0.0043238
+#  0.00269606 0.00243407 0.00338189 0.00553372 0.00968965 0.0034401
+#  0.00921705 0.00240662 0.01062479 0.02079044 0.00410092 0.00336994
+#  0.00226214 0.00373709 0.00658469 0.00515965 0.00356926 0.00646835
+#  0.00382512 0.00524497 0.00636991 0.00540764 0.00928245 0.0064315
+#  0.00242459 0.00312608 0.00253985 0.0086536  0.00205987 0.00278174
+#  0.00304655 0.00198154 0.0033883  0.00320502 0.00468446 0.00526796
+#  0.00945409 0.0114612  0.01124271 0.00436949 0.00449737 0.00280206
+#  0.00397621 0.00700377 0.00422685 0.00263356 0.00556683 0.00474751
+#  0.00257545 0.00664775 0.00656697 0.00651347 0.00258415 0.00424419
+#  0.00303815 0.00558999 0.00397032 0.00243121 0.00668883 0.00477082
+#  0.00369189 0.00945596 0.00276133 0.00477557 0.00243162 0.00435216
+#  0.00300327 0.01437121 0.00299103 0.00477657 0.00326909 0.00275213
+#  0.00323376 0.00443318 0.00946902 0.00673853 0.0070622  0.00693836
+#  0.00461292 0.00351017 0.00312455 0.001901   0.00745176 0.00504821
+#  0.00399977 0.00631466 0.00300498 0.00249194 0.00234107 0.00258409
+#  0.00451847 0.00539806 0.00799045 0.008092   0.00961987 0.00494531
+#  0.00309181 0.00789897 0.00729571 0.00278114 0.00567239 0.00594268
+#  0.01210985 0.00388275 0.00233782 0.00792188 0.00344046 0.00801629
+#  0.00514524 0.00313081 0.00229753 0.00279006 0.00728301 0.0023998
+#  0.00503351 0.00310086 0.00587701 0.00236715 0.00879352 0.00910966
+#  0.00708408 0.00297517 0.00344223 0.00365804 0.0040557  0.00486356
+#  0.00929751 0.00392456]
+# 25%지점 : 0.0028857291908934712
+# ACC2 : 0.9127
